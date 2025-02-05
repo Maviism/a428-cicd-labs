@@ -24,24 +24,26 @@ pipeline {
             }
         }
         stage('Deploy') {
+            // Run on the Jenkins host (not inside the agent container)
+            agent none 
             steps {
-                sh 'chmod +x ./jenkins/scripts/deliver.sh' // update chmod to fix ./jenkins/scripts/deliver.sh: Permission denied
-                sh './jenkins/scripts/deliver.sh'
-                // sleep 1 minute
-                sh 'sleep 60'
-                sh 'chmod +x ./jenkins/scripts/kill.sh' // fix ./jenkins/scripts/kill.sh: Permission denied
-                sh './jenkins/scripts/kill.sh'
-                 // Stop and remove old container if exists
-                sh '''
-                docker stop myapp-production || true
-                docker rm myapp-production || true
-                '''
+                script {
+                    // Ensure Docker is available on the host
+                    sh 'docker --version'
 
-                // Run the React app inside a Node.js container
-                sh '''
-                docker run -d --name myapp-production -p 3001:3001 -v $(pwd):/app -w /app node:16-buster-slim sh -c "npm install && npm run build && npm install -g serve && serve -s build -l 3001"
-                '''
-                        
+                    // Stop & remove old container if exists
+                    sh '''
+                    docker stop myapp-production || true
+                    docker rm myapp-production || true
+                    '''
+
+                    // Run React app inside a Node.js container
+                    sh '''
+                    docker run -d --name myapp-production -p 3001:3001 \
+                        -v $(pwd):/app -w /app node:16-buster-slim \
+                        sh -c "npm install && npm run build && npm install -g serve && serve -s build -l 3001"
+                    '''
+                }
             }
         }
     }
