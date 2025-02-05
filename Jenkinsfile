@@ -31,6 +31,15 @@ pipeline {
                 sh 'sleep 60'
                 sh 'chmod +x ./jenkins/scripts/kill.sh' // fix ./jenkins/scripts/kill.sh: Permission denied
                 sh './jenkins/scripts/kill.sh'
+                // deploy to production docker container
+                sh '''
+                    docker run -d \
+                    --name prod-node-app \
+                    -p 3001:3000 \
+                    -v $WORKSPACE:/app \
+                    node:16-buster-slim \
+                    sh -c "cd /app && npm install && npm start"
+                '''
             }
         }
     }
