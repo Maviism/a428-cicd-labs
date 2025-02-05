@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'node:16-buster-slim' 
-            args '-p 3000:3000' 
+            args '-p 3000:3000 -v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
     stages {
@@ -40,6 +40,31 @@ pipeline {
                     node:16-buster-slim \
                     sh -c "cd /app && npm install && npm start"
                 '''
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                sh 'chmod +x ./jenkins/scripts/deliver.sh'
+                sh './jenkins/scripts/deliver.sh'
+                sh 'sleep 60'
+                sh 'chmod +x ./jenkins/scripts/kill.sh'
+                sh './jenkins/scripts/kill.sh'
+                
+                // Run with root privileges
+                sh '''
+                    sudo docker run -d \
+                    --name prod-node-app \
+                    -p 3001:3000 \
+                    -v ${WORKSPACE}:/app \
+                    node:16-buster-slim \
+                    sh -c "cd /app && npm install && npm start"
+                '''
+            }
+            post {
+                failure {
+                    sh 'sudo docker rm -f prod-node-app || true'
+                }
             }
         }
     }
