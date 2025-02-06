@@ -33,9 +33,7 @@ pipeline {
                 sh 'chmod +x ./jenkins/scripts/deliver.sh' // update chmod to fix ./jenkins/scripts/deliver.sh: Permission denied
                 sh './jenkins/scripts/deliver.sh'
                 // sleep 1 minute
-                // sh 'sleep 60'
-                // deploy to production
-                sh 'cd build ls -la'
+                sh 'sleep 60'
                 script {
                     // Add remote server's SSH key to known_hosts automatically
                     sh '''
