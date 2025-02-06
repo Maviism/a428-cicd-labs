@@ -28,13 +28,14 @@ pipeline {
                 sh 'chmod +x ./jenkins/scripts/deliver.sh' // update chmod to fix ./jenkins/scripts/deliver.sh: Permission denied
                 sh './jenkins/scripts/deliver.sh'
                 // sleep 1 minute
-                sh 'sleep 60'
+                // sh 'sleep 60'
                 // deploy to production
+                sh 'ls -la'
                 script {
                     // SCP command using the SSH credentials
                     withCredentials([sshUserPrivateKey(credentialsId: 'my-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                         sh '''
-                            scp -i $SSH_KEY -r ./dist user@remote.server:/var/www/html/dist
+                            scp -i $SSH_KEY -r ./dist maviism@98.66.137.249:/var/www/html/dist
                         '''
                     }
                 }
