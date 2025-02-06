@@ -24,7 +24,7 @@ pipeline {
             }
         }
         stage('Deploy') {
-            agent none
+            agent { label 'docker-node' }
             steps {
                 script {
                     sh '''
