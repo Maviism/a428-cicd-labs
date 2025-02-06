@@ -35,7 +35,7 @@ pipeline {
                 // sleep 1 minute
                 // sh 'sleep 60'
                 // deploy to production
-                sh 'ls -la'
+                sh 'cd build ls -la'
                 script {
                     // Add remote server's SSH key to known_hosts automatically
                     sh '''
@@ -46,7 +46,7 @@ pipeline {
                     // SCP command using the SSH credentials
                     withCredentials([sshUserPrivateKey(credentialsId: 'my-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                         sh '''
-                            scp -i $SSH_KEY -r ./dist $USER@$REMOTE_SERVER:$REMOTE_PATH
+                            scp -i $SSH_KEY -r ./build $USER@$REMOTE_SERVER:$REMOTE_PATH
                         '''
                     }
                 }
