@@ -2,19 +2,19 @@ pipeline {
     agent {
         docker {
             image 'node:16-buster-slim' 
-            args '-p 3000:3000'
+            args '-p 3000:3000' 
         }
     }
     stages {
         stage('Build') { 
             steps {
                 sh 'npm install'
-                sh 'npm run build'
             }
         }
         stage('Test') {
             steps {
-                sh 'chmod +x ./jenkins/scripts/test.sh'
+                sh 'chmod +x ./jenkins/scripts/test.sh' // fix ./jenkins/scripts/test.sh: Permission denied
+                sh 'ls -la ./jenkins/scripts/'
                 sh './jenkins/scripts/test.sh'
             }
         }
@@ -24,15 +24,22 @@ pipeline {
             }
         }
         stage('Deploy') {
-            agent { label 'docker-node' }
             steps {
+                sh 'chmod +x ./jenkins/scripts/deliver.sh' // update chmod to fix ./jenkins/scripts/deliver.sh: Permission denied
+                sh './jenkins/scripts/deliver.sh'
+                // sleep 1 minute
+                sh 'sleep 60'
+                // deploy to production
                 script {
-                    sh '''
-                    apt-get update && apt-get install -y sshpass
-                    chmod +x ./jenkins/scripts/deploy.sh
-                    ./jenkins/scripts/deploy.sh
-                    '''
+                    // SCP command using the SSH credentials
+                    withCredentials([sshUserPrivateKey(credentialsId: 'my-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                        sh '''
+                            scp -i $SSH_KEY -r ./dist user@remote.server:/var/www/html/dist
+                        '''
+                    }
                 }
+                sh 'chmod +x ./jenkins/scripts/kill.sh' // fix ./jenkins/scripts/kill.sh: Permission denied
+                sh './jenkins/scripts/kill.sh'
             }
         }
     }
