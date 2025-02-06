@@ -26,9 +26,13 @@ pipeline {
         stage('Deploy') {
             agent none
             steps {
-                sh 'sudo apt-get update && apt-get install -y sshpass'
-                sh 'chmod +x ./jenkins/scripts/deploy.sh'
-                sh './jenkins/scripts/deploy.sh'
+                script {
+                    sh '''
+                    apt-get update && apt-get install -y sshpass
+                    chmod +x ./jenkins/scripts/deploy.sh
+                    ./jenkins/scripts/deploy.sh
+                    '''
+                }
             }
         }
     }
