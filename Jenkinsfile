@@ -5,6 +5,11 @@ pipeline {
             args '-p 3000:3000' 
         }
     }
+    environment {
+        USER = 'maviism'              // Remote server username
+        REMOTE_SERVER = '98.66.137.249' // Remote server IP or hostname
+        REMOTE_PATH = '/var/www/html/dist'  // Target path for SCP
+    }
     stages {
         stage('Build') { 
             steps {
@@ -32,10 +37,16 @@ pipeline {
                 // deploy to production
                 sh 'ls -la'
                 script {
+                    // Add remote server's SSH key to known_hosts automatically
+                    sh '''
+                        mkdir -p ~/.ssh
+                        ssh-keyscan -H $REMOTE_SERVER >> ~/.ssh/known_hosts
+                    '''
+
                     // SCP command using the SSH credentials
                     withCredentials([sshUserPrivateKey(credentialsId: 'my-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                         sh '''
-                            scp -i $SSH_KEY -r ./dist maviism@98.66.137.249:/var/www/html/dist
+                            scp -i $SSH_KEY -r ./dist $USER@$REMOTE_SERVER:$REMOTE_PATH
                         '''
                     }
                 }
